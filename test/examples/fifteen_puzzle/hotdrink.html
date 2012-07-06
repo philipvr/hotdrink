@@ -1,0 +1,207 @@
+<html>
+<head>
+  <title>Fifteen Puzzle | HotDrink</title>
+  <style type="text/css">
+    #board {
+      border: 1px solid black;
+    }
+    #board td {
+      border: 1px solid black;
+      width: 35px;
+      height: 35px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    #key {
+      background-color: #EEEEEE;
+      font-family: monospace;
+      border: 1px solid black;
+      width: 23px;
+      height: 23px;
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
+  <script type="text/javascript" src="https://raw.github.com/kriskowal/es5-shim/master/es5-shim.min.js"></script>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="../../js/hotdrink.js"></script>
+  <script type="text/javascript">
+    var GamePiece = hd.model(function GamePiece(num, game) {
+      this.num = hd.variable(num);
+      this.index = num;      
+
+      this.isPlayable = hd.computed(function () {
+        if (game.timeFinished()) {
+          return false;
+        }
+        var i, spots = game.playableSpots();
+        for (i = 0; i < spots.length; ++i) {
+          if (spots[i] === this.index) {
+            return true;
+          }
+        }
+        return false;
+      });
+      
+      this.isVisible = hd.computed(function() {
+        return (this.num() !== 0) && !this.isPlayable();
+      });
+    });
+    
+    var Model = hd.model(function Model() {
+      var game = this;
+      this.spaceIndex = hd.variable(15);
+      this.timeStarted = hd.variable(Date.now());
+      this.timeFinished = hd.variable();
+      
+      this.playableSpots = function playableSpots(spaceIndex) {
+        if (!spaceIndex) {
+          spaceIndex = this.spaceIndex();
+        }
+
+        var spots = [];
+        if (Math.floor((spaceIndex + 1) / 4) === Math.floor(spaceIndex / 4)) {
+          spots.push(spaceIndex + 1);
+        }
+        if (Math.floor((spaceIndex - 1) / 4) === Math.floor(spaceIndex / 4)) {
+          spots.push(spaceIndex - 1);
+        }
+        if (spaceIndex + 4 < 16) {
+          spots.push(spaceIndex + 4);
+        }
+        if (spaceIndex - 4 >= 0) {
+          spots.push(spaceIndex - 4);
+        }
+        return spots;
+      };
+
+      this.mixUp = function mixUp(board, spaceIndex) {
+        for (var i = 0; i < 249; ++i) {
+          var spots = this.playableSpots(spaceIndex);
+          var spotIndex = spots[Math.floor(Math.random() * spots.length)];
+          board[spaceIndex] = board[spotIndex];
+          board[spotIndex] = 0;
+          spaceIndex = spotIndex;
+        }
+        return spaceIndex;
+      };
+      
+      this.newBoard = function newBoard() {
+        var board = [], temp = [];
+        var k, j;
+        for (k = 1; k < 16; ++k) {
+            temp.push(k);
+        }
+        temp.push(0);
+        var space = this.mixUp(temp, 15);
+        this.spaceIndex(space);
+
+        for (k = 0; k < 4; ++k) {
+          board.push([]);
+          for (j = 0; j < 4; ++j) {
+            board[k].push(
+              new GamePiece(k * 4 + j, game)
+            );
+          }
+        }
+        for (k = 0; k < 4; ++k) {
+          for (j = 0; j < 4; ++j) {
+            board[k][j].num(temp[k * 4 + j]);
+          }
+        }
+        this.timeFinished(null);
+        this.timeStarted(Date.now());
+        return board;
+      }
+      
+      this.board = hd.list(this.newBoard());
+      
+      this.moveTile = function(spot) {
+        var parent = this.$parent || this;
+        parent.board()[Math.floor(parent.spaceIndex() / 4)][parent.spaceIndex() % 4].num(spot.num());
+        spot.num(0);
+        parent.spaceIndex(spot.index);
+        
+        var k, j;
+        for (k = 0; k < 4; ++k) {
+          for (j = 0; j < 4; ++j) {
+            if (parent.board()[k][j].num() !== k * 4 + j + 1 &&
+                k * 4 + j < 15) {
+              return;
+            }
+          }
+        }
+        parent.timeFinished(Date.now());
+      };
+      
+      this.message = hd.computed(function() {
+        return this.timeFinished() ? "You finished in " + ((this.timeFinished() - this.timeStarted()) / 1000) + " seconds." : "<br />";
+      });
+      
+      this.newGame = function() {
+        this.board(this.newBoard());
+      };
+      
+    });
+
+    var game = new Model;
+
+    $(document).ready(function () {
+      hd.bind(game);
+    });
+    
+    var keyPressFunction = function keyPressFunction(evt) {
+      var key = (evt.which) ? evt.which : event.keyCode;
+      key = String.fromCharCode(key);
+      
+      var keyLookUp = { d: 1, a: -1, s: 4, w: -4 };
+
+      if (keyLookUp.hasOwnProperty(key) && !game.timeFinished()) {
+        var i, spots = game.playableSpots();
+        for (i = 0; i < spots.length; ++i) {
+          if (spots[i] === game.spaceIndex() + keyLookUp[key]) {
+            game.moveTile(
+              game.board()[Math.floor(spots[i] / 4)][spots[i] % 4]
+            );
+            break;
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body onKeyPress="keyPressFunction(event)">
+<h2>Fifteen Puzzle</h2>
+<button data-bind="click: newGame">New Game</button>
+<table id="board">
+  <tbody data-bind="foreach: board">
+    <tr data-bind="foreach: $this">
+      <td>
+        <span data-bind="if: isPlayable">
+          <input type="button" data-bind="click: $parents[1].moveTile.bind($parent), attr: {value: num}"></input>
+        </span>
+        <span data-bind="text: num, visible: isVisible"></span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<div data-bind="html: message"></div>
+<h3>Controls</h3>
+<p>Click on the tiles to move them into open space</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;OR</p>
+<p>Use the keyboard:</p>
+<table id="controls">
+  <tr><td id="key">a</td>
+  <td>= slide tile to the <b>left</b> into open space</td></tr>
+  
+  <tr><td id="key">d</td>
+  <td>= slide tile to the <b>right</b> into open space</td></tr>
+  
+  <tr><td id="key">w</td>
+  <td>= slide tile <b>on top</b> into open space</td></tr>
+  
+  <tr><td id="key">s</td>
+  <td>= slide tile <b>on bottom</b> into open space</td></tr>
+</tr></table>
+</body>
+</html>

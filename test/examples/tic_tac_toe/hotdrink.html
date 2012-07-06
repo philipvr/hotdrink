@@ -1,17 +1,17 @@
 <html>
 <head>
-  <title>Tic Tac Toe</title>
+  <title>Tic Tac Toe | HotDrink</title>
   <style type="text/css">
-      #board {
-        border: 1px solid black;
-      }
-      #board td {
-        border: 1px solid black;
-        width: 30px;
-        height: 30px;
-        text-align: center;
-        vertical-align: middle;
-      }
+    #board {
+      border: 1px solid black;
+    }
+    #board td {
+      border: 1px solid black;
+      width: 30px;
+      height: 30px;
+      text-align: center;
+      vertical-align: middle;
+    }
   </style>
   <script type="text/javascript" src="https://raw.github.com/kriskowal/es5-shim/master/es5-shim.min.js"></script>
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
@@ -21,8 +21,8 @@
       this.x = x;
       this.y = y;
       this.player = hd.variable("");
-      this.isNotPlayable = hd.computed(function () {
-        return (this.player() || game.winner());
+      this.isPlayable = hd.computed(function () {
+        return !(this.player() || game.winner());
       });
     });
     
@@ -30,17 +30,14 @@
       var game = this;
       
       var newBoard = function newBoard() {
-        var board = [
-          [new BoardSpot(0,0, game),
-          new BoardSpot(0,1, game),
-          new BoardSpot(0,2, game)],
-          [new BoardSpot(1,0, game),
-          new BoardSpot(1,1, game),
-          new BoardSpot(1,2, game)],
-          [new BoardSpot(2,0, game),
-          new BoardSpot(2,1, game),
-          new BoardSpot(2,2, game)]
-        ];
+        var board = [];
+        var j, k;
+        for (j = 0; j < 3; ++j) {
+          board.push([]);
+          for (k = 0; k < 3; ++k) {
+            board[j].push(new BoardSpot(j, k, game));
+          }
+        }
         return board;
       }
       
@@ -116,7 +113,7 @@
 <tbody data-bind="foreach: board">
 <tr data-bind="foreach: $this">
 <td>
-<span data-bind="ifnot: isNotPlayable">
+<span data-bind="if: isPlayable">
 <input type="button" data-bind="click: $parents[1].playTurn.bind($parent)"></input>
 </span>
 <span data-bind="text: $this.player, visible: $this.player"></span>
