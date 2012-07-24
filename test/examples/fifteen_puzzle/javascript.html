@@ -1,0 +1,208 @@
+<html>
+<head>
+  <title>Fifteen Puzzle | Javascript</title>
+  <style type="text/css">
+    #board {
+      border: 1px solid black;
+    }
+    #board td {
+      width: 35px;
+      height: 35px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    td.showBorder {
+      border: 1px solid black;
+    }
+    #key {
+      background-color: #EEEEEE;
+      font-family: monospace;
+      border: 1px solid black;
+      width: 23px;
+      height: 23px;
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
+  <script type="text/javascript">
+    var board;
+    var spaceR;
+    var spaceC;
+    var spaceTd;
+    var numMoves;
+    var timeStarted;
+    var timeFinished;
+    
+    function mixup() {
+      for (var i = 0; i < 249; ++i) {
+        var playableTiles = [];
+        if (spaceR + 1 < 4) {
+          playableTiles.push({ row: spaceR + 1, col: spaceC });
+        }
+        if (spaceR - 1 >= 0) {
+          playableTiles.push({ row: spaceR - 1, col: spaceC });
+        }
+        if (spaceC + 1 < 4) {
+          playableTiles.push({ row: spaceR, col: spaceC + 1 });
+        }
+        if (spaceC - 1 >= 0) {
+          playableTiles.push({ row: spaceR, col: spaceC - 1 });
+        }
+        var tile = playableTiles[Math.floor(Math.random() * playableTiles.length)];
+        board[spaceR][spaceC] = board[tile.row][tile.col]
+        board[tile.row][tile.col] = 0;
+        spaceR = tile.row;
+        spaceC = tile.col;
+      }
+    }
+    
+    function newGame() {
+      board = [[], [], [], []];
+      spaceR = 3;
+      spaceC = 3;
+      numMoves = 0;
+      timeStarted = Date.now();
+      
+      for (var r = 0; r < 4; ++r) {
+        for (var c = 0; c < 4; ++c) {
+          board[r][c] = r * 4 + c + 1;
+        }
+      }
+      board[3][3] = 0;
+      mixup();
+      
+      var table = document.getElementById('board');
+      for (var r = 0; r < 4; ++r) {
+        var tr = table.rows[r];
+        for (var c = 0; c < 4; ++c) {
+          var td = tr.cells[c];
+          td.onclick = (function(td, row, col) {return function() {moveTile(td, row, col);};})(td, r, c);
+          if(r !== spaceR || c !== spaceC) {
+            td.replaceChild(document.createTextNode(board[r][c]), td.firstChild);
+            td.classList.add("showBorder");
+          } else {
+            td.replaceChild(document.createTextNode(""), td.firstChild);
+            spaceTd = td;
+            td.classList.remove("showBorder");
+          }
+        }
+      }
+    }
+    
+    function moveTile(td, row, col) {
+      if (timeFinished) {
+        return;
+      }
+      if (!((row == spaceR + 1 || row == spaceR - 1) && col == spaceC) &&
+          !((col == spaceC + 1 || col == spaceC - 1) && row == spaceR)) {
+        return;
+      }
+      board[spaceR][spaceC] = board[row][col];
+      spaceTd.replaceChild(document.createTextNode(board[spaceR][spaceC]), spaceTd.firstChild);
+      spaceTd.classList.add("showBorder");
+      
+      board[row][col] = 0;
+      td.replaceChild(document.createTextNode(""), td.firstChild);
+      td.classList.remove("showBorder");
+      
+      numMoves++;
+      spaceTd = td;
+      spaceR = row;
+      spaceC = col;
+      
+      for (var r = 0; r < 4; ++r) {
+        for (var c = 0; c < 4; ++c) {
+          if (board[r][c] != (r * 4 + c + 1) && (c !== 3 || r !== 3)) {
+            return;
+          }
+        }
+      }
+      timeFinished = Date.now();
+      updateStatus();
+    }
+    
+    function updateStatus() {
+      var status = document.getElementById('status');
+      status.firstChild.nodeValue = timeFinished ? "You took " + numMoves + 
+          " moves and finished in " + ((timeFinished - 
+          timeStarted) / 1000) + " seconds." : "<br />";
+    }
+
+    var keyPressFunction = function keyPressFunction(evt) {
+      var key = (evt.which) ? evt.which : event.keyCode;
+      key = String.fromCharCode(key);
+      
+      var keyLookUp = { 
+          d: { row: spaceR, col: spaceC + 1 },
+          a: { row: spaceR, col: spaceC - 1 },
+          s: { row: spaceR + 1, col: spaceC },
+          w: { row: spaceR - 1, col: spaceC }
+      };
+      
+      if (key === "n") {
+        newGame();
+      } else if (keyLookUp.hasOwnProperty(key)) {
+        var tile = keyLookUp[key];
+        if (tile.row < 0 || tile.col < 0 || tile.row > 3 || tile.col > 3) {
+          return;
+        }
+        var table = document.getElementById('board');
+        moveTile(table.rows[tile.row].cells[tile.col], tile.row, tile.col);
+      }
+    };
+  </script>
+</head>
+<body onload="newGame()" onKeyPress="keyPressFunction(event)">
+  <h2>Fifteen Puzzle</h2>
+	<input type="button" id="newgame" value="New Game" onclick="newGame()"/>
+  <table id="board">
+    <tr>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+    </tr>
+    <tr>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+    </tr>
+    <tr>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+    </tr>
+    <tr>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+      <td class="showBorder">&nbsp;</td>
+    </tr>
+  </table>
+  <div id="status">&nbsp;</div>
+  <h3>Controls</h3>
+  <p>Click on the tiles to move them into open space</p>
+  <p>&nbsp;&nbsp;&nbsp;&nbsp;or</p>
+  <p>Use the keyboard:</p>
+  <table id="controls">
+    <tr>
+      <td id="key">a</td>
+      <td>= slide tile <b>to the left</b> into open space</td>
+    </tr>
+    <tr>
+      <td id="key">d</td>
+      <td>= slide tile <b>to the right</b> into open space</td>
+    </tr>
+    <tr>
+      <td id="key">w</td>
+      <td>= slide tile <b>on top</b> into open space</td>
+    </tr>
+    <tr>
+      <td id="key">s</td>
+      <td>= slide tile <b>on bottom</b> into open space</td>
+    </tr>
+  </table>
+</body>
+</html>

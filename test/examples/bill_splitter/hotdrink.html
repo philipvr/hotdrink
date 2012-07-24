@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <title>Bill Splitter | HotDrink</title>
+    <script type="text/javascript" src="https://raw.github.com/kriskowal/es5-shim/master/es5-shim.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../../js/hotdrink.js"></script>
+    <script type="text/javascript">
+      var Person = hd.model(function Person(name, paid) {
+        this.name = hd.variable(name);
+        this.paid = hd.variable(paid);
+      });
+      
+      var Model = hd.model(function Model() {
+        this.people = hd.list([
+          new Person("Abe", 100),
+          new Person("Bob", 60),
+          new Person("Cal", 70),
+          new Person("Dan", 90),
+          new Person("Ean", 10)
+        ]);
+        
+        this.whoOwesWho = hd.computed(function() {
+          var people = this.people();
+
+          var total = 0;
+          for (var i = 0; i < people.length; ++i) {
+            total += people[i].paid();
+          }
+          var amount = total / people.length;
+          
+          var WhoOwesWhat = [];
+          for (var i = 0; i < people.length; ++i) {
+            WhoOwesWhat[i] = amount - people[i].paid();
+          }
+          var messages = [];
+          var i, j = 0;
+          for (var i = 0; i < WhoOwesWhat.length; ++i) {
+            if (WhoOwesWhat[i] > 0) {
+              for ( ; j < WhoOwesWhat.length; ++j) {
+                if(WhoOwesWhat[j] < 0) {
+                  var owesWhat = (WhoOwesWhat[j] + WhoOwesWhat[i] > 0) ? 
+                      -WhoOwesWhat[j] : WhoOwesWhat[i];
+                  
+                  WhoOwesWhat[j] += owesWhat;
+                  WhoOwesWhat[i] -= owesWhat;
+                  messages.push(people[i].name() + " owes " + 
+                      people[j].name() + " $" + owesWhat.toFixed(2));
+                }
+                if (WhoOwesWhat[i] <= 0) {
+                  break;
+                }
+              }
+            }
+          }
+          return messages;
+        });
+        
+      });
+
+      var model = new Model;
+
+      $(document).ready(function () {
+        hd.bind(model);
+      });
+    </script>
+  </head>
+  <body>
+    <table id="people">
+      <tbody data-bind="foreach: people">
+        <tr>
+          <td data-bind="text: name"></td>
+          <td><input type="text" data-bind="number: paid"/></td>
+        </tr>
+      </tbody>
+    </table>
+    </br>
+    <table>
+      <tbody data-bind="foreach: whoOwesWho">
+        <tr>
+          <td data-bind="text: $this"></td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
