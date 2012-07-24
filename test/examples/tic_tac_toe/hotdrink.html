@@ -1,124 +1,122 @@
 <html>
-<head>
-  <title>Tic Tac Toe | HotDrink</title>
-  <style type="text/css">
-    #board {
-      border: 1px solid black;
-    }
-    #board td {
-      border: 1px solid black;
-      width: 30px;
-      height: 30px;
-      text-align: center;
-      vertical-align: middle;
-    }
-  </style>
-  <script type="text/javascript" src="https://raw.github.com/kriskowal/es5-shim/master/es5-shim.min.js"></script>
-  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script type="text/javascript" src="../../js/hotdrink.js"></script>
-  <script type="text/javascript">
-    var BoardSpot = hd.model(function BoardSpot(x,y, game) {
-      this.x = x;
-      this.y = y;
-      this.player = hd.variable("");
-      this.isPlayable = hd.computed(function () {
-        return !(this.player() || game.winner());
-      });
-    });
-    
-    var Model = hd.model(function Model() {
-      var game = this;
-      
-      var newBoard = function newBoard() {
-        var board = [];
-        var j, k;
-        for (j = 0; j < 3; ++j) {
-          board.push([]);
-          for (k = 0; k < 3; ++k) {
-            board[j].push(new BoardSpot(j, k, game));
-          }
-        }
-        return board;
+  <head>
+    <title>Tic Tac Toe | HotDrink</title>
+    <style type="text/css">
+      #board {
+        border: 1px solid black;
       }
-      
-      this.whoseTurn = hd.variable("X");
-      this.winner = hd.variable("");
-      this.numTurns = hd.variable(0);
-      this.board = hd.variable(newBoard());
-      
-      this.playTurn = function(spot) {
-        var parent = this.$parent;
-        spot.player(parent.whoseTurn());
-        
-        // check if player won
-        if(parent.board()[0][spot.y].player() === parent.board()[1][spot.y].player() && 
-           parent.board()[0][spot.y].player() === parent.board()[2][spot.y].player()) {
-          parent.winner(parent.whoseTurn());
-        } else if(parent.board()[spot.x][0].player() === parent.board()[spot.x][1].player() && 
-                  parent.board()[spot.x][0].player() === parent.board()[spot.x][2].player()) {
-          parent.winner(parent.whoseTurn());
-        } else if(parent.board()[0][0].player() !== "" && parent.board()[0][0].player() === parent.board()[1][1].player() && 
-                  parent.board()[0][0].player() === parent.board()[2][2].player()) {
-          parent.winner(parent.whoseTurn());
-        } else if(parent.board()[1][1].player() !== "" && parent.board()[1][1].player() === parent.board()[2][0].player() && 
-                  parent.board()[1][1].player() === parent.board()[0][2].player()) {
-          parent.winner(parent.whoseTurn());
-        }
-        parent.numTurns(parent.numTurns() + 1);
-        
-        // switch players
-        if(parent.whoseTurn() === "X") {
-          parent.whoseTurn("O");
-        } else {
-          parent.whoseTurn("X");
-        }
-      };
-      
-      this.message = hd.computed(function() {
-        var text = "";
-        if(this.numTurns() === 9 && this.winner() === "") {
-          text = "Cat's game."
-        } else if(this.winner() === "") {
-          text = this.whoseTurn() + "'s turn.";
-        } else {
-          text = this.winner() + "'s won!";
-        }
-        return text;
+      #board td {
+        border: 1px solid black;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        vertical-align: middle;
+      }
+    </style>
+    <script type="text/javascript" src="https://raw.github.com/kriskowal/es5-shim/master/es5-shim.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../../js/hotdrink.js"></script>
+    <script type="text/javascript">
+      var BoardSpot = hd.model(function BoardSpot(x,y, game) {
+        this.x = x;
+        this.y = y;
+        this.player = hd.variable("");
+        this.isPlayable = hd.computed(function () {
+          return !(this.player() || game.winner());
+        });
       });
       
-      this.newGame = function() {
-        this.board(newBoard());
-        this.winner("");
-        this.numTurns(0);
-        this.whoseTurn("X");
-      };
-      
-      this.newGameButton = hd.computed(function() {
-        return (this.numTurns() === 0) ? "disabled" : undefined;
+      var Model = hd.model(function Model() {
+        var game = this;
+        
+        var newBoard = function newBoard() {
+          var board = [];
+          var j, k;
+          for (j = 0; j < 3; ++j) {
+            board.push([]);
+            for (k = 0; k < 3; ++k) {
+              board[j].push(new BoardSpot(j, k, game));
+            }
+          }
+          return board;
+        }
+        
+        this.whoseTurn = hd.variable("X");
+        this.winner = hd.variable("");
+        this.numTurns = hd.variable(0);
+        this.board = hd.variable(newBoard());
+        
+        this.playTurn = function(spot) {
+          var parent = this.$parent;
+          spot.player(parent.whoseTurn());
+          
+          // check if player won
+          if(parent.board()[0][spot.y].player() === parent.board()[1][spot.y].player() && 
+             parent.board()[0][spot.y].player() === parent.board()[2][spot.y].player()) {
+            parent.winner(parent.whoseTurn());
+          } else if(parent.board()[spot.x][0].player() === parent.board()[spot.x][1].player() && 
+                    parent.board()[spot.x][0].player() === parent.board()[spot.x][2].player()) {
+            parent.winner(parent.whoseTurn());
+          } else if(parent.board()[0][0].player() !== "" && parent.board()[0][0].player() === parent.board()[1][1].player() && 
+                    parent.board()[0][0].player() === parent.board()[2][2].player()) {
+            parent.winner(parent.whoseTurn());
+          } else if(parent.board()[1][1].player() !== "" && parent.board()[1][1].player() === parent.board()[2][0].player() && 
+                    parent.board()[1][1].player() === parent.board()[0][2].player()) {
+            parent.winner(parent.whoseTurn());
+          }
+          parent.numTurns(parent.numTurns() + 1);
+          
+          // switch players
+          if(parent.whoseTurn() === "X") {
+            parent.whoseTurn("O");
+          } else {
+            parent.whoseTurn("X");
+          }
+        };
+        
+        this.message = hd.computed(function() {
+          var text = "";
+          if(this.numTurns() === 9 && this.winner() === "") {
+            text = "Cat's game."
+          } else if(this.winner() === "") {
+            text = this.whoseTurn() + "'s turn.";
+          } else {
+            text = this.winner() + "'s won!";
+          }
+          return text;
+        });
+        
+        this.newGame = function() {
+          this.board(newBoard());
+          this.winner("");
+          this.numTurns(0);
+          this.whoseTurn("X");
+        };
+        
       });
-      
-    });
 
-    var model = new Model;
+      var model = new Model;
 
-    $(document).ready(function () {
-      hd.bind(model);
-    });
-  </script>
-</head>
-<body>
-<h2>Two Player Tic-Tac-Toe</h2>
-<button data-bind="click: newGame, attr: {disabled: newGameButton}">New Game</button>
-<table id="board">
-<tbody data-bind="foreach: board">
-<tr data-bind="foreach: $this">
-<td>
-<span data-bind="if: isPlayable">
-<input type="button" data-bind="click: $parents[1].playTurn.bind($parent)"></input>
-</span>
-<span data-bind="text: $this.player, visible: $this.player"></span>
-</td></tr></tbody>
-</table>
-<div data-bind="text: message"></div>
-</body>
+      $(document).ready(function () {
+        hd.bind(model);
+      });
+    </script>
+  </head>
+  <body>
+    <h2>Two Player Tic-Tac-Toe</h2>
+    <input type="button" value="New Game" data-bind="click: newGame, enable: numTurns" />
+    <table id="board">
+      <tbody data-bind="foreach: board">
+        <tr data-bind="foreach: $this">
+          <td>
+            <span data-bind="if: isPlayable">
+              <input type="button" data-bind="click: $parents[1].playTurn.bind($parent)" />
+            </span>
+            <span data-bind="text: $this.player, visible: $this.player"></span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div data-bind="text: message"></div>
+  </body>
 </html>
